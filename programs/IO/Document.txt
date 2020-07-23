@@ -1,0 +1,144 @@
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import javax.microedition.lcdui.Command;
+import javax.microedition.lcdui.CommandListener;
+import javax.microedition.lcdui.Display;
+import javax.microedition.lcdui.Displayable;
+
+import javax.microedition.lcdui.Form;
+import javax.microedition.media.Manager;
+import javax.microedition.media.Player;
+import javax.microedition.media.control.RecordControl;
+
+public class Thread_1 implements CommandListener, Runnable{
+
+
+VoiceRecorder midlet;
+private Display display;
+private Form form;
+private Command exitCommand;
+
+
+private Player capturePlayer = null;
+
+private Player playbackPlayer = null;
+
+private RecordControl recordControl = null;
+
+private ByteArrayOutputStream bos ;
+private ByteArrayInputStream bis = null;
+
+
+public Thread_1(VoiceRecorder m)
+{
+this.midlet=m;
+display=Display.getDisplay(m);
+form=new Form("Recording Started");
+exitCommand = new Command("Exit", Command.EXIT, 1);
+
+String str ="Recording Started";
+form.append(str);
+form.addCommand(exitCommand);
+
+form.setCommandListener(this);
+display.setCurrent(form);
+ try {
+ capturePlayer = Manager.createPlayer("capture://audio?encoding=pcm");
+
+  if (capturePlayer != null) {
+    capturePlayer.realize();
+    recordControl = (RecordControl) capturePlayer
+        .getControl("javax.microedition.media.control.RecordControl");
+
+    if (recordControl == null)
+      throw new Exception("No RecordControl available");
+    bos = new ByteArrayOutputStream();
+    recordControl.setRecordStream(bos);
+  } else {
+    throw new Exception("Capture Audio Player is not available");
+  }
+} catch (Exception e) {
+
+}
+
+}
+public void start()
+{
+Thread th=new Thread(this);
+th.start();
+}
+
+// run method to record voice........................................................
+public void run()
+{
+
+  try{   
+  capturePlayer.start();
+  recordControl.startRecord();
+
+
+
+  recordControl.commit();
+
+  }catch(Exception e){
+  System.out.print(e);
+  }
+   Thread_2 th2=new Thread_2(midlet);
+        th2.start();  
+}
+// close to record voice........................................................
+public void commandAction(Command cmd, Displayable disp) {
+    if (cmd == exitCommand) {
+
+
+
+    }
+
+}
+
+ public class Thread_2 implements CommandListener, Runnable{
+ VoiceRecorder midlet;
+ private Display display;
+ private Form form;
+ private Command exitCommand;
+
+public Thread_2(VoiceRecorder m)
+{
+this.midlet=m;
+display=Display.getDisplay(m);
+form=new Form("Playing");
+exitCommand = new Command("back", Command.EXIT, 1);
+String str ="Playing";
+form.append(str);
+form.addCommand(exitCommand);
+form.setCommandListener(this);
+display.setCurrent(form);
+
+}
+public void start()
+{
+Thread th=new Thread(this);
+th.start();
+}
+// Playing voice........................................................
+public void run()
+{
+   try{  bis = new ByteArrayInputStream(bos.toByteArray());
+
+  playbackPlayer = Manager.createPlayer(bis,"audio/wav");
+  playbackPlayer.start();
+
+   }catch(Exception e){
+    System.out.print(e);}
+
+    Thread_1 th1=new Thread_1(midlet);
+        th1.start();
+}
+// Stop Playing ........................................................
+public void commandAction(Command cmd, Displayable disp) {
+    if (cmd == exitCommand) {
+
+    }
+}
+}
+ }

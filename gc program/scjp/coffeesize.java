@@ -1,0 +1,1 @@
+enum coffeesize{big,huge,overwhelming};
